@@ -14,7 +14,7 @@ middles['APECHI']= [100, 101, 102, 103, 105, 106, 107, 108, 109, 112, 113, 114, 
 #db, collection
 mdb=dbc.init_db('tracks','tracks')
 
-def getTracks(middle_start, middle_end, start, end, countThres=50, chunkSize=100, timesleep=1):
+def getTracks(middle_start, middle_end, start, end, countThres=50, chunkSize=30, timesleep=1):
     for middle in range(middle_start, middle_end):
         if middle in middles['APELAX']:
             prefix='APELAX'
@@ -36,7 +36,7 @@ def getTracks(middle_start, middle_end, start, end, countThres=50, chunkSize=100
             param['lang']='zh'
             param['trackingno']=trackNumber
             info = getSingleTrackInfo(param)
-            
+            print trackNumber
             #check if no more number available
             if info['code']==200:
                 if len(info['detail'])==0:
@@ -73,7 +73,10 @@ def getSingleTrackInfo(param):
                     res={}
                     divn=dd.findAll("div", class_="n")
                     if len(divn)>0:
-                        trackStatus=divn[0].contents[0]
+                        if len(divn[0].contents)>0:
+                            trackStatus=divn[0].contents[0]
+                        else:
+                            trackStatus=''
                         res['status']=trackStatus
                     else:
                         continue
@@ -88,7 +91,10 @@ def getSingleTrackInfo(param):
                         continue
                     divt=dd.findAll("div", class_="t")
                     if len(divt)>0:
-                        trackTime=divt[0].contents[0]
+                        if len(divt[0].contents)>0:
+                            trackTime=divt[0].contents[0]
+                        else:
+                            trackTime=''
                         res['time']=trackTime
                     else:
                         continue
@@ -122,7 +128,7 @@ if __name__ == '__main__':
                         help    = "start value")
     parser.add_argument('-e', '--end',
                         dest    = 'end',
-                        default = '9999999',
+                        default = '10000000',
                         nargs   = '?',
                         type    = int,
                         help    = "end value")
@@ -134,5 +140,5 @@ if __name__ == '__main__':
                         help    = "sleep time")
     args = parser.parse_args()
     
-    sys.stdout = open('ms%s_me%s_s%s_e%s.log' %(args.middle_start, args.middle_end, args.start, args.end), 'w')
+    # sys.stdout = open('ms%s_me%s_s%s_e%s.log' %(args.middle_start, args.middle_end, args.start, args.end), 'w', 0)
     params=getTracks(middle_start=args.middle_start, middle_end=args.middle_end, start=args.start, end=args.end)
