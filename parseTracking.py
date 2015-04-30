@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup as bs
-
+import time
 
 
 
@@ -28,6 +28,8 @@ def getTrackInfo(param):
         text= bs(r.text)
         dls=text.findAll("dl", class_="trackList")
         if len(dls)>0:
+            print param['trackingno'], 'yes'
+            return
             dds=dls[0].findAll("dd")
             if len(dds)>0:
                 for dd in dds:
@@ -46,9 +48,11 @@ def getTrackInfo(param):
                     if len(divt)>0:
                         trackTime=divt[0].contents[0]
                         print trackTime
+        print param['trackingno'], 'not found'
+                        
 
 
-
-
-params=generateParams('APELAX', middle_start=122, middle_end=124, start=1, end=5)
-getTrackInfo(params[0])
+params=generateParams('APELAX', middle_start=119, middle_end=134, start=1, end=2)
+for param in params:
+    getTrackInfo(param)
+    time.sleep(1)
