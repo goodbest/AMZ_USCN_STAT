@@ -1,16 +1,20 @@
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 import requests
 from bs4 import BeautifulSoup as bs
 import time
 from pymongo import MongoClient
 import dbConfig as dbc
+import argparse
 
 middles={}
 middles['APELAX']= [104, 110, 111, 115, 116, 118, 119, 122, 131, 132, 133]
 middles['APECHI']= [100, 101, 102, 103, 105, 106, 107, 108, 109, 112, 113, 114, 117, 120, 121, 123, 124, 125, 126, 127, 128, 129, 130, 134]
-mdb=dbc.init_db('test','test')
+#db, collection
+mdb=dbc.init_db('tracks','tracks')
 
-
-def getTracks(middle_start, middle_end, start=1, end=2, countThres=50, chunkSize=3, timesleep=1):
+def getTracks(middle_start, middle_end, start, end, countThres=50, chunkSize=100, timesleep=1):
     for middle in range(middle_start, middle_end):
         if middle in middles['APELAX']:
             prefix='APELAX'
@@ -47,8 +51,9 @@ def getTracks(middle_start, middle_end, start=1, end=2, countThres=50, chunkSize
                 dbresult=mdb.insert_many(chunks)
                 print dbresult.inserted_ids
                 chunks=[]
-        dbresult=mdb.insert_many(chunks)
-        print dbresult.inserted_ids
+        if len(chunks)>0:
+            dbresult=mdb.insert_many(chunks)
+            print dbresult.inserted_ids
 
 
 def getSingleTrackInfo(param):
@@ -94,5 +99,40 @@ def getSingleTrackInfo(param):
         ret['code']=r.status_code
     return ret
 
-
-params=getTracks(middle_start=100, middle_end=102, start=1, end=6)
+if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser(description="query amazon tracks")
+    parser.add_argument('-ms', '--middle-start',
+                        dest    = 'middle_start',
+                        default = '100',
+                        nargs   = '?',
+                        type    = int,
+                        help    = "middle start value")
+    parser.add_argument('-me', '--middle-end',
+                        dest    = 'middle_end',
+                        default = '134',
+                        nargs   = '?',
+                        type    = int,
+                        help    = "middle end value")
+    parser.add_argument('-s', '--start',
+                        dest    = 'start',
+                        default = '1',
+                        nargs   = '?',
+                        type    = int,
+                        help    = "start value")
+    parser.add_argument('-e', '--end',
+                        dest    = 'end',
+                        default = '9999999',
+                        nargs   = '?',
+                        type    = int,
+                        help    = "end value")
+    parser.add_argument('-ts', '--time-sleep',
+                        dest    = 'time_sleep',
+                        default = '1',
+                        nargs   = '?',
+                        type    = int,
+                        help    = "sleep time")
+    args = parser.parse_args()
+    
+    sys.stdout = open('ms%s_me%s_s%s_e%s.log' %(args.middle_start, args.middle_end, args.start, args.end), 'w')
+    params=getTracks(middle_start=args.middle_start, middle_end=args.middle_end, start=args.start, end=args.end)
