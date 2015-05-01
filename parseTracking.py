@@ -24,6 +24,7 @@ def getTracks(middle_start, middle_end, start, end, countThres=50, chunkSize=30,
             continue
         
         countNoExist=0
+        idNoExist=[]
         chunks=[]
         
         for i in range(start, end):
@@ -41,10 +42,13 @@ def getTracks(middle_start, middle_end, start, end, countThres=50, chunkSize=30,
             if info['code']==200:
                 if len(info['detail'])==0:
                     countNoExist+=1
+                    idNoExist.append({'_id':info['_id']})
                 else:
                     countNoExist=0
+                    idNoExist=[]
             else:
                 countNoExist+=1
+                idNoExist.append({'_id':info['_id']})
             
             chunks.append(info)
             if len(chunks)>=chunkSize:
@@ -54,6 +58,9 @@ def getTracks(middle_start, middle_end, start, end, countThres=50, chunkSize=30,
         if len(chunks)>0:
             dbresult=mdb.insert_many(chunks)
             print dbresult.inserted_ids
+        for ele in idNoExist:
+            dbresult=mdb.delete_many(ele)
+            print '%d delete, %s' %(dbresult.deleted_count, ele['_id'])
 
 
 def getSingleTrackInfo(param):
@@ -134,11 +141,11 @@ if __name__ == '__main__':
                         help    = "end value")
     parser.add_argument('-ts', '--time-sleep',
                         dest    = 'time_sleep',
-                        default = '1',
+                        default = '2',
                         nargs   = '?',
                         type    = int,
                         help    = "sleep time")
     args = parser.parse_args()
     
     # sys.stdout = open('ms%s_me%s_s%s_e%s.log' %(args.middle_start, args.middle_end, args.start, args.end), 'w', 0)
-    params=getTracks(middle_start=args.middle_start, middle_end=args.middle_end, start=args.start, end=args.end)
+    params=getTracks(middle_start=args.middle_start, middle_end=args.middle_end, start=args.start, end=args.end, timesleep=args.time_sleep)
